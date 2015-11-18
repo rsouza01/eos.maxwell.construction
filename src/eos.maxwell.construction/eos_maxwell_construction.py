@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# tovsolver - Tolman-Oppenheimer-Volkoff equation solver
+# eos.maxwell.construction - EoS merger based on the Maxwell Construction
 # Copyright (C) 2015 Rodrigo Souza <rsouza01@gmail.com>
 
 # This program is free software; you can redistribute it and/or
@@ -19,45 +19,19 @@
 # 02110-1301, USA.
 
 
-"""
-    tovsolver.py - Python version from old tovsover
-
-    History:
-    Version 0.1: 2015/08/29     (rsouza) - Creating the file.
-
-    Usage:
-        tovsolver.py
-
-    Example:
-        ./tovsolver.py
-
-"""
-
-
-from mainsolver import TOVSolver
-from mainsolver import TOVSolverConfig
 import sys
-import tovconfig
+import config
 
 
 def main(argv):
 
-    rho_0, config_name, epsilon, pressure = tovconfig.get_cl_parameters(argv)
+    config_name = config.get_cl_parameters(argv)
 
-    config = tovconfig.get_parameters_from_conf(config_name)
+    conf = config.get_parameters_from_conf(config_name)
 
-    config = TOVSolverConfig(
-        central_mass_density=rho_0,
-        eos_file_name=config.eos_file_name,
-        cutoff_density=config.cutoff_density,
-        config_name=config_name)
-
-    tovSolver = TOVSolver(config)
-
-    if epsilon != 0 or pressure != 0:
-            tovSolver.evaluate(epsilon/rho_0, pressure/rho_0)
-    else:
-        tovSolver.run()
+    print("config_name = {}".format(config_name))
+    print("hadrons_eos_file_name = {}".format(conf.hadrons_eos_file_name))
+    print("quarks_eos_file_name = {}".format(conf.quarks_eos_file_name))
 
 
 if __name__ == "__main__":
