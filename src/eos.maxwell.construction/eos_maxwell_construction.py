@@ -21,6 +21,7 @@
 
 import sys
 import config
+import eos
 
 
 def main(argv):
@@ -33,6 +34,14 @@ def main(argv):
     print("hadrons_eos_file_name = {}".format(conf.hadrons_eos_file_name))
     print("quarks_eos_file_name = {}".format(conf.quarks_eos_file_name))
 
+    hadron_eos = eos.EoS(conf.hadrons_eos_file_name, False)
+    quark_eos = eos.EoS(conf.quarks_eos_file_name, False)
+
+    # quark_eos.pretty_print()
+    # hadron_eos.pretty_print()
+
+    # print("hadron_eos.pressure_from_energy(1.589312795304E36) = {}".format(hadron_eos.pressure_from_energy(1.589312795304E+036)))
+    # print("hadron_eos.pressure_from_energy(5.9518562eE36) = {}".format(hadron_eos.pressure_from_energy(5.9518562e36)))
 
 if __name__ == "__main__":
     main(sys.argv[1:])

@@ -1,4 +1,4 @@
-# tovsolver - Tolman-Oppenheimer-Volkoff equation solver
+# eos.maxwell.construction - EoS merger based on the Maxwell Construction
 # Copyright (C) 2015 Rodrigo Souza <rsouza01@gmail.com>
 
 # This program is free software; you can redistribute it and/or
@@ -28,13 +28,13 @@ import cgs_constants as const
 import matplotlib.pyplot as plt
 
 
-ENERGY_DENSITY_INDEX = 0
 MASS_DENSITY_INDEX = 0
 PRESSURE_INDEX = 1
 BARYONIC_NUMBER_INDEX = 2
+ENERGY_DENSITY_INDEX = 3
 
 
-class EoSValue(namedtuple('EoSValue', 'energy pressure baryonic_number')):
+class EoSValue(namedtuple('EoSValue', 'mass_density pressure baryonic_number energy chemical_potential')):
     """
     Named tuple that represents an EoS value
     """
@@ -43,15 +43,13 @@ class EoSValue(namedtuple('EoSValue', 'energy pressure baryonic_number')):
 
 class EoS:
 
-    def __init__(self, filename, central_energy_density, verbose=False):
+    def __init__(self, filename, verbose=False):
 
         self.__filename = filename
 
-        self.__central_energy_density = central_energy_density
+        loader = EoSLoader(self.__filename)
 
-        loader = EoSLoader(self.__filename, central_energy_density)
-
-        loader.loadEoSFile()
+        self.__eos = loader.loadEoSFile()
 
         interp = EoSInterpolation(loader.getEoSList())
 
@@ -74,16 +72,21 @@ class EoS:
 
         return self.__pressure_from_energy_function(energy)
 
+    def pretty_print(self):
+
+        for element in self.__eos:
+
+            print("{}".format(element))
+
 
 class EoSLoader:
     """ EoS Loader. """
 
     __eosList = []
 
-    def __init__(self, filename, central_energy_density=1):
+    def __init__(self, filename):
 
         self.__filename = filename
-        self.__central_energy_density = central_energy_density
 
         # print("self.__central_energy_density = {}".format(self.__central_energy_density))
 
@@ -96,10 +99,21 @@ class EoSLoader:
             reader = csv.reader(f)
             for row in reader:
                 if not row[0].startswith('#'):
-                    eosValue = EoSValue(float(
-                        row[MASS_DENSITY_INDEX])*const.LIGHT_SPEED**2./self.__central_energy_density,
-                        float(row[PRESSURE_INDEX])/self.__central_energy_density,
-                        float(row[BARYONIC_NUMBER_INDEX]))
+
+                    # TODO: Calcular o $\mu$
+
+                    mass_density = float(row[MASS_DENSITY_INDEX])
+                    energy = float(row[MASS_DENSITY_INDEX])*const.LIGHT_SPEED**2.
+                    pressure = float(row[PRESSURE_INDEX])
+                    baryonic_number = float(row[BARYONIC_NUMBER_INDEX])
+                    chemical_potential = (energy + pressure)/baryonic_number
+
+                    eosValue = EoSValue(
+                        mass_density=mass_density,
+                        energy=energy,
+                        pressure=pressure,
+                        baryonic_number=baryonic_number,
+                        chemical_potential=chemical_potential)
 
                     self.__eosList.append(eosValue)
 
@@ -109,6 +123,7 @@ class EoSLoader:
 
         # print(firstColumn)
 
+        return self.__eosList
 
 class EoSInterpolation:
     """ EoS Interpolation. """
@@ -118,7 +133,7 @@ class EoSInterpolation:
         self.__eosList = eosList
 
         self.__energyValues = numpy.asarray(
-            [row[MASS_DENSITY_INDEX] for row in self.__eosList],  dtype=numpy.float32)
+            [row[MASS_DENSITY_INDEX]*const.LIGHT_SPEED**2. for row in self.__eosList],  dtype=numpy.float32)
 
         self.__pressureValues = numpy.asarray(
             [row[PRESSURE_INDEX] for row in self.__eosList],  dtype=numpy.float32)
@@ -140,6 +155,7 @@ class EoSInterpolation:
             plt.xlabel("Pressure")
             plt.title("\epsilon(P)")
             plt.show()
+            plt.gcf().clear()
 
         return fc
 
@@ -157,5 +173,6 @@ class EoSInterpolation:
             plt.ylabel("Pressure")
             plt.title("P(e)")
             plt.show()
+            plt.gcf().clear()
 
         return fc
