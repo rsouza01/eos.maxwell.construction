@@ -22,6 +22,11 @@
 import sys
 import config
 import eos
+from scipy.optimize import fsolve
+
+
+def find_intersection(fun1, fun2, x0):
+    return fsolve(lambda x: fun1(x) - fun2(x), x0)
 
 
 def main(argv):
@@ -37,11 +42,10 @@ def main(argv):
     hadron_eos = eos.EoS(conf.hadrons_eos_file_name, False)
     quark_eos = eos.EoS(conf.quarks_eos_file_name, False)
 
-    # quark_eos.pretty_print()
-    # hadron_eos.pretty_print()
+    print(find_intersection(hadron_eos.pressure_from_chem_potential,
+                            quark_eos.pressure_from_chem_potential,
+                            1e35))
 
-    # print("hadron_eos.pressure_from_energy(1.589312795304E36) = {}".format(hadron_eos.pressure_from_energy(1.589312795304E+036)))
-    # print("hadron_eos.pressure_from_energy(5.9518562eE36) = {}".format(hadron_eos.pressure_from_energy(5.9518562e36)))
 
 if __name__ == "__main__":
     main(sys.argv[1:])

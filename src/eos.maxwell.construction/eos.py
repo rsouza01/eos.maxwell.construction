@@ -32,6 +32,7 @@ MASS_DENSITY_INDEX = 0
 PRESSURE_INDEX = 1
 BARYONIC_NUMBER_INDEX = 2
 ENERGY_DENSITY_INDEX = 3
+CHEM_POTENTIAL_INDEX = 4
 
 
 class EoSValue(namedtuple('EoSValue', 'mass_density pressure baryonic_number energy chemical_potential')):
@@ -40,10 +41,12 @@ class EoSValue(namedtuple('EoSValue', 'mass_density pressure baryonic_number ene
     """
     pass
 
-
 class EoS:
 
     def __init__(self, filename, verbose=False):
+
+        self.inferior_range = 0.
+        self.superior_range = 0.
 
         self.__filename = filename
 
@@ -60,6 +63,9 @@ class EoS:
         self.__pressure_from_energy_function = \
             interp.interpolate_spline_pressure_from_energy(plotFit=verbose)
 
+        self.__pressure_from_chem_potential_function = \
+            interp.interpolate_spline_pressure_from_chem_potential(plotFit=verbose)
+
     def energy_from_pressure(self, pressure):
 
         # print("energy_from_pressure(%f)" % (pressure))
@@ -71,6 +77,12 @@ class EoS:
         # print("pressure_from_energy(%f)" % (energy))
 
         return self.__pressure_from_energy_function(energy)
+
+    def pressure_from_chem_potential(self, chem_potential):
+
+        print("pressure_from_chem_potential(%f)" % (chem_potential))
+
+        return self.__pressure_from_chem_potential_function(chem_potential)
 
     def pretty_print(self):
 
@@ -100,22 +112,20 @@ class EoSLoader:
             for row in reader:
                 if not row[0].startswith('#'):
 
-                    # TODO: Calcular o $\mu$
-
                     mass_density = float(row[MASS_DENSITY_INDEX])
                     energy = float(row[MASS_DENSITY_INDEX])*const.LIGHT_SPEED**2.
                     pressure = float(row[PRESSURE_INDEX])
                     baryonic_number = float(row[BARYONIC_NUMBER_INDEX])
                     chemical_potential = (energy + pressure)/baryonic_number
 
-                    eosValue = EoSValue(
+                    eos_value = EoSValue(
                         mass_density=mass_density,
                         energy=energy,
                         pressure=pressure,
                         baryonic_number=baryonic_number,
                         chemical_potential=chemical_potential)
 
-                    self.__eosList.append(eosValue)
+                    self.__eosList.append(eos_value)
 
         # print(self.__eosList)
 
@@ -125,6 +135,49 @@ class EoSLoader:
 
         return self.__eosList
 
+
+class EoSInterpolationFunction:
+
+    __INDEX_X = 0
+    __INDEX_Y = 1
+
+    def __init__(self, xy_values, x_name, y_name):
+
+        self.__xy_values = xy_values
+
+        # Checking ranges.
+        self.__inferior_range = self.__xy_values[0][self.__INDEX_X]
+        self.__superior_range = self.__xy_values[len(self.__xy_values)-1][self.__INDEX_X]
+
+        print("self.__inferior_range = {}".format(self.__inferior_range))
+        print("self.__superior_range = {}".format(self.__superior_range))
+
+        # Must sort the list in order to the interpolation routines work.
+        if self.__inferior_range > self.__superior_range:
+
+            self.__xy_values.sort()
+
+            self.__inferior_range = self.__xy_values[0][self.__INDEX_X]
+            self.__superior_range = self.__xy_values[len(self.__xy_values)-1][self.__INDEX_X]
+
+        self.__function = interpolate.interp1d(
+            zip(*self.__xy_values)[self.__INDEX_X],
+            zip(*self.__xy_values)[self.__INDEX_Y])
+
+        # 4.1796461e+35, 1.10198e+35
+        # print("###########f(4.1796461e+35) = {}".format(self.__function(4.1796461e+35)))
+
+        plt.figure()
+        plt.plot(zip(*self.__xy_values)[self.__INDEX_X],
+                 self.__function(zip(*self.__xy_values)[self.__INDEX_X]), 'x',
+                 zip(*self.__xy_values)[self.__INDEX_X], zip(*self.__xy_values)[self.__INDEX_Y])
+        plt.legend(['True', 'Cubic Spline'])
+        plt.ylabel("Energy")
+        plt.xlabel("Pressure")
+        plt.title("\epsilon(P)")
+        plt.show()
+
+
 class EoSInterpolation:
     """ EoS Interpolation. """
 
@@ -133,13 +186,16 @@ class EoSInterpolation:
         self.__eosList = eosList
 
         self.__energyValues = numpy.asarray(
-            [row[MASS_DENSITY_INDEX]*const.LIGHT_SPEED**2. for row in self.__eosList],  dtype=numpy.float32)
+            [row.energy for row in self.__eosList],  dtype=numpy.float32)
 
         self.__pressureValues = numpy.asarray(
-            [row[PRESSURE_INDEX] for row in self.__eosList],  dtype=numpy.float32)
+            [row.pressure for row in self.__eosList],  dtype=numpy.float32)
 
         self.__baryonicNumberValues = numpy.asarray(
-            [row[BARYONIC_NUMBER_INDEX] for row in self.__eosList],  dtype=numpy.float32)
+            [row.baryonic_number for row in self.__eosList],  dtype=numpy.float32)
+
+        self.__chemPotentialValues = numpy.asarray(
+            [row.chemical_potential for row in self.__eosList],  dtype=numpy.float32)
 
     def interpolate_spline_energy_from_pressure(self, plotFit=False):
 
@@ -156,6 +212,18 @@ class EoSInterpolation:
             plt.title("\epsilon(P)")
             plt.show()
             plt.gcf().clear()
+
+        return fc
+
+    def interpolate_spline_pressure_from_chem_potential(self, plotFit=False):
+
+        function = EoSInterpolationFunction(
+            zip(self.__chemPotentialValues[::-1],
+                self.__pressureValues[::-1]), "mu", "P")
+
+
+
+        fc = interpolate.interp1d(self.__chemPotentialValues[::-1], self.__pressureValues[::-1])
 
         return fc
 
