@@ -31,3 +31,13 @@ SUN_RADIUS 				= 6.959e10  # cm
 QUARK_UP_MASS			= 5    # MeV
 QUARK_DOWN_MASS			= 7    # MeV
 QUARK_STRANGE_MASS		= 150  # MeV
+
+MEV_TO_ERG              = 1.6021773e-6
+FM_TO_CM                = 1e-13
+FM3_TO_CM3              = 1e-39
+
+ERG_TO_MEV              = 6.24150647996e5
+CM_TO_FM                = 1e13
+FM3_TO_CM3              = 1e39
+
+
