@@ -24,7 +24,7 @@ from collections import namedtuple
 
 
 class ConfigParameters(namedtuple('ConfigParameters',
-                                  'hadrons_eos_file_name quarks_eos_file_name')):
+                                  'bin_size, hadrons_eos_file_name quarks_eos_file_name')):
     """
     Named tuple that represents the parameters in the file tov_solver.conf
     """
@@ -88,7 +88,8 @@ def get_parameters_from_conf(config_name):
     # EOS Parameters
     hadrons_eos_file_name = config_section_map(config, "EOS_Hadrons")["eos_file_name"]
     quarks_eos_file_name = config_section_map(config, "EOS_Quarks")["eos_file_name"]
+    bin_size = config_section_map(config, "eos.maxwell.construction")["bin_size"]
 
-    config = ConfigParameters(hadrons_eos_file_name, quarks_eos_file_name)
+    config = ConfigParameters(bin_size, hadrons_eos_file_name, quarks_eos_file_name)
 
     return config

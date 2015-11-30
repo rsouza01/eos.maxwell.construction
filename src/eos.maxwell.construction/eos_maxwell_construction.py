@@ -76,7 +76,7 @@ def main(argv):
 
     chem_potential_bin = np.linspace(range_intersection.sup_limit,
                                      range_intersection.inf_limit,
-                                     110)
+                                     conf.bin_size)
 
     print("# rho, pressure, chem_potential")
 
