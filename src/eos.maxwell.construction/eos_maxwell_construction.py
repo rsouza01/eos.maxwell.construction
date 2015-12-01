@@ -66,7 +66,6 @@ def main(argv):
 
     print("# Range = {}".format(range_intersection))
 
-    print("#"*80)
 
     # warnings.simplefilter("ignore")
 
@@ -77,6 +76,15 @@ def main(argv):
     chem_potential_bin = np.linspace(range_intersection.sup_limit,
                                      range_intersection.inf_limit,
                                      conf.bin_size)
+
+    pressure_transition_hadron = hadron_eos.pressure_from_chem_potential().get_function()(mu_border)
+    pressure_transition_quark = quark_eos.pressure_from_chem_potential().get_function()(mu_border)
+
+    print("#")
+    print("# Transition pressure (hadrons) = {}".format(pressure_transition_hadron))
+    print("# Transition pressure (quarks) = {}".format(pressure_transition_quark))
+    print("#")
+    print("#"*80)
 
     print("# rho, pressure, chem_potential")
 
