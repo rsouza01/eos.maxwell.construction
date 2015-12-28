@@ -29,8 +29,36 @@ import numpy as np
 from scipy.optimize import fsolve
 
 
-def find_intersection(fun1, fun2, x0):
-    return fsolve(lambda x: fun1(x) - fun2(x), x0)
+def find_intersection(pressure_hadrons, pressure_quarks, mu_0):
+    """
+    Finds the point where the two functions intersect.
+    Arguments:
+        pressure_hadrons(function) -- pressure from mu, hadrons
+        pressure_quarks(function) -- pressure from mu, quarks
+        mu_0(float) -- initial guess
+
+    """
+
+    # # HADRONS
+    # # 3181.0392079975 -> 2600.8357501993
+    # chem_pot = 3181.0392079975
+    # pressure_real = 2600.8357501993
+    # pressure = fHadrons(chem_pot)
+    # print("###########    hadron_eos({}) = {}, interp = {}".format(chem_pot, pressure_real, pressure))
+    #
+    # # QCD
+    # # 6911.94413912 -> 13932.80346
+    # chem_pot = 6911.94413912
+    # pressure_real = 13932.80346
+    # pressure = fQuarks(chem_pot)
+    # print("###########    quark_eos({}) = {}, interp = {}".format(chem_pot, pressure_real, pressure))
+
+    # chem_pot = mu_0
+    # print("# hadron_eos({}) = {}".format(chem_pot, pressure_hadrons(chem_pot)))
+    # print("# quark_eos({}) = {}".format(chem_pot, pressure_quarks(chem_pot)))
+    # mu_0 = 2700
+
+    return fsolve(lambda mu: pressure_quarks(mu) - pressure_hadrons(mu), mu_0)
 
 
 def find_range_intersection(range_hadrons, range_quarks):
@@ -47,8 +75,9 @@ def main(argv):
 
     conf = config.get_parameters_from_conf(config_name)
 
-    print("#"*80)
+    print("#" * 80)
     print("# config_name = {}".format(config_name))
+    print("# mu_0 = {}".format(conf.mu_0))
     print("# quarks_eos_file_name = {}".format(conf.quarks_eos_file_name))
     print("# hadrons_eos_file_name = {}".format(conf.hadrons_eos_file_name))
 
@@ -66,12 +95,31 @@ def main(argv):
 
     print("# Range = {}".format(range_intersection))
 
-
     # warnings.simplefilter("ignore")
 
-    mu_border = find_intersection(hadron_eos.pressure_from_chem_potential().get_function(),
-                                  quark_eos.pressure_from_chem_potential().get_function(),
-                                  range_intersection.inf_limit)
+    # TESTE
+    #
+    # HADRONS
+    # 3181.0392079975 -> 2600.8357501993
+    # chem_pot = 3181.0392079975
+    # pressure = hadron_eos.pressure_from_chem_potential().get_function()(chem_pot)
+    # print("###########    hadron_eos({}) = {}".format(chem_pot, pressure))
+
+    # QCD
+    # 6911.94413912 -> 13932.80346
+    # chem_pot = 6911.94413912
+    # chem_pot = 6911.94413912
+    # pressure = quark_eos.pressure_from_chem_potential().get_function()(chem_pot)
+    # print("###########    quark_eos({}) = {}".format(chem_pot, pressure))
+
+    try:
+        mu_border = find_intersection(hadron_eos.pressure_from_chem_potential().get_function(),
+                                      quark_eos.pressure_from_chem_potential().get_function(),
+                                      conf.mu_0)
+    except ValueError:
+        print("# Try another initial guess for the chemical potential.")
+        print("#" * 80)
+        sys.exit(-1)
 
     chem_potential_bin = np.linspace(range_intersection.sup_limit,
                                      range_intersection.inf_limit,
@@ -84,7 +132,7 @@ def main(argv):
     print("# Transition pressure (hadrons) = {}".format(pressure_transition_hadron))
     print("# Transition pressure (quarks) = {}".format(pressure_transition_quark))
     print("#")
-    print("#"*80)
+    print("#" * 80)
 
     print("# rho, pressure, chem_potential")
 
@@ -94,17 +142,19 @@ def main(argv):
             eos_function = hadron_eos.pressure_from_chem_potential().get_function()
             pressure = eos_function(chem_potential)
             energy = hadron_eos.energy_from_pressure(pressure)
-            rho = energy / 2.998e10**2.
+            rho = energy / 2.998e10 ** 2.
 
         else:
             eos_function = quark_eos.pressure_from_chem_potential().get_function()
             pressure = eos_function(chem_potential)
             energy = quark_eos.energy_from_pressure(pressure)
-            rho = energy / 2.998e10**2.
-
+            rho = energy / 2.998e10 ** 2.
 
         # print("(mu, epsilon, P) = ({}, {}, {})".format(chem_potential, energy, pressure))
-        print("{}, {}, {}".format(rho, pressure, chem_potential))
+        # CGS
+        # print("{}, {}, {}".format(rho, pressure, chem_potential))
+        # NUC
+        print("{}, {}, {}".format(energy, pressure, chem_potential))
 
 
 if __name__ == "__main__":
