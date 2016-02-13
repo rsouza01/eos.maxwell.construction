@@ -19,6 +19,7 @@
 
 import csv
 import numpy
+from enum import Enum
 
 from collections import namedtuple
 from scipy import interpolate
@@ -32,7 +33,12 @@ MASS_DENSITY_INDEX = 0
 PRESSURE_INDEX = 1
 BARYONIC_NUMBER_INDEX = 2
 ENERGY_DENSITY_INDEX = 3
-CHEM_POTENTIAL_INDEX = 4
+CHEM_POTENTIAL_INDEX = 3
+
+
+class EosPhase(Enum):
+    hadron = 1
+    quark = 2
 
 
 class EoSValue(namedtuple('EoSValue', 'mass_density pressure baryonic_number energy chemical_potential')):
@@ -143,7 +149,12 @@ class EoSLoader:
                     energy = float(row[MASS_DENSITY_INDEX])
                     pressure = float(row[PRESSURE_INDEX])
                     baryonic_number = float(row[BARYONIC_NUMBER_INDEX])
-                    chemical_potential = (energy + pressure)/baryonic_number
+
+                    # Is there chemical potential in the file?
+
+                    chemical_potential = float(row[CHEM_POTENTIAL_INDEX])
+
+                    # chemical_potential = (energy + pressure)/baryonic_number
 
                     eos_value = EoSValue(
                         mass_density=mass_density,
@@ -266,7 +277,7 @@ class EoSInterpolation:
         # print(self.__chemPotentialValues)
         # print(self.__energyValues)
 
-    def interpolate_spline_energy_from_pressure(self, plotFit=False):
+    def interpolate_spline_energy_from_pressure(self, plotFit=True):
 
         fc = interpolate.interp1d(self.__pressureValues[::-1], self.__energyValues[::-1])
 

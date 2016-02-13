@@ -24,7 +24,7 @@ from collections import namedtuple
 
 
 class ConfigParameters(namedtuple('ConfigParameters',
-                                  'bin_size hadrons_eos_file_name quarks_eos_file_name mu_0')):
+                                  'config_file bin_size hadrons_eos_file_name quarks_eos_file_name mu_0')):
     """
     Named tuple that represents the parameters in the file tov_solver.conf
     """
@@ -58,9 +58,10 @@ def get_cl_parameters(argv):
     :return:
     """
     config_file = "properties.conf"
+    bin_size = 2000
 
     try:
-        opts, args = getopt.getopt(argv, "hc:", ["help", "config="])
+        opts, args = getopt.getopt(argv, "hc:", ["help", "config=", "quarks=", "hadrons=", "mu_0="])
     except getopt.GetoptError as err:
         print(err)
         usage()
@@ -71,25 +72,48 @@ def get_cl_parameters(argv):
         if opt in ("-c", "--config"):
             config_file = arg
 
+        elif opt == "--quarks":
+            quarks_eos_file_name = arg
+
+        elif opt == "--hadrons":
+            hadrons_eos_file_name = arg
+
+        elif opt == "--mu_0":
+            mu_0 = float(arg)
+
         elif opt == '-h':
             usage()
             exit(0)
         else:
+            print(opt)
             assert False, "Unhandled exception."
 
-    return config_file
+    config = ConfigParameters(config_file, bin_size, hadrons_eos_file_name, quarks_eos_file_name, mu_0)
+
+    return config
 
 
-def get_parameters_from_conf(config_name):
+def get_parameters_from_conf(config):
+    """
+    Read the config file parameters. The precedence is ALWAYS from the command line.
+    :param config: EosConfig object.
+    :return: updated EosConfig object
+    """
 
-    config = cp.ConfigParser()
-    config.read(config_name)
+    config_parser = cp.ConfigParser()
+    config_parser.read(config.config_file)
 
     # EOS Parameters
-    hadrons_eos_file_name = config_section_map(config, "EOS_Hadrons")["eos_file_name"]
-    quarks_eos_file_name = config_section_map(config, "EOS_Quarks")["eos_file_name"]
-    bin_size = float(config_section_map(config, "eos.maxwell.construction")["bin_size"])
-    mu_0 = float(config_section_map(config, "eos.maxwell.construction")["mu_0"])
-    config = ConfigParameters(bin_size, hadrons_eos_file_name, quarks_eos_file_name, mu_0)
+    if config.hadrons_eos_file_name is  None:
+        config.hadrons_eos_file_name = config_section_map(config, "EOS_Hadrons")["eos_file_name"]
+
+    if config.quarks_eos_file_name is None:
+        config.quarks_eos_file_name = config_section_map(config, "EOS_Quarks")["eos_file_name"]
+
+    if config.bin_size is None or config.bin_size < 0:
+        config.bin_size = float(config_section_map(config, "eos.maxwell.construction")["bin_size"])
+
+    if config.mu_0 is None or config.mu_0 < 0:
+        config.mu_0 = float(config_section_map(config, "eos.maxwell.construction")["mu_0"])
 
     return config

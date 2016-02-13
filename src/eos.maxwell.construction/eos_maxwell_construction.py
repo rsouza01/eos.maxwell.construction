@@ -25,7 +25,9 @@ import eos
 import os
 import warnings
 import string
+import matplotlib.pyplot as plt
 import numpy as np
+
 from scipy.optimize import fsolve
 
 
@@ -69,14 +71,13 @@ def find_range_intersection(range_hadrons, range_quarks):
 
 
 def main(argv):
-    # os.system('cls' if os.name == 'nt' else 'clear')
 
-    config_name = config.get_cl_parameters(argv)
+    conf = config.get_cl_parameters(argv)
 
-    conf = config.get_parameters_from_conf(config_name)
+    conf = config.get_parameters_from_conf(conf)
 
     print("#" * 80)
-    print("# config_name = {}".format(config_name))
+    print("# config_name = {}".format(conf.config_file))
     print("# mu_0 = {}".format(conf.mu_0))
     print("# quarks_eos_file_name = {}".format(conf.quarks_eos_file_name))
     print("# hadrons_eos_file_name = {}".format(conf.hadrons_eos_file_name))
@@ -121,10 +122,6 @@ def main(argv):
         print("#" * 80)
         sys.exit(-1)
 
-    chem_potential_bin = np.linspace(range_intersection.sup_limit,
-                                     range_intersection.inf_limit,
-                                     conf.bin_size)
-
     pressure_transition_hadron = hadron_eos.pressure_from_chem_potential().get_function()(mu_border)
     pressure_transition_quark = quark_eos.pressure_from_chem_potential().get_function()(mu_border)
 
@@ -134,21 +131,43 @@ def main(argv):
     print("#")
     print("#" * 80)
 
-    print("# rho, pressure, chem_potential")
+    print("# energy density [MeV fm-3], pressure [MeV fm-3], chem_potential [fm-3]")
+
+    chem_potential_bin = np.linspace(range_intersection.sup_limit-1,
+                                     range_intersection.inf_limit+1,
+                                     conf.bin_size)
+
+    eos_phase = None
 
     for chem_potential in chem_potential_bin:
 
         if chem_potential < mu_border:
+
+            if eos_phase is None or eos_phase == eos.EosPhase.quark:
+                print("#" + 78*"H")
+                print("#" + " BEGINNING OF HADRON PHASE")
+                print("#" + 78*"H")
+                eos_phase = eos.EosPhase.hadron
+
             eos_function = hadron_eos.pressure_from_chem_potential().get_function()
             pressure = eos_function(chem_potential)
+
             energy = hadron_eos.energy_from_pressure(pressure)
-            rho = energy / 2.998e10 ** 2.
+            # rho = energy / 2.998e10 ** 2.
 
         else:
+            if eos_phase is None or eos_phase == eos.EosPhase.hadron:
+                print("#" + 78*"Q")
+                print("#" + " BEGINNING OF QUARK PHASE")
+                print("#" + 78*"Q")
+                eos_phase = eos.EosPhase.quark
+
             eos_function = quark_eos.pressure_from_chem_potential().get_function()
             pressure = eos_function(chem_potential)
             energy = quark_eos.energy_from_pressure(pressure)
-            rho = energy / 2.998e10 ** 2.
+            # rho = energy / 2.998e10 ** 2.
+
+
 
         # print("(mu, epsilon, P) = ({}, {}, {})".format(chem_potential, energy, pressure))
         # CGS
