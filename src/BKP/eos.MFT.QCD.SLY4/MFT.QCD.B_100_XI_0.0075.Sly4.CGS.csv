@@ -1,0 +1,9 @@
+################################################################################
+# config_name = sly_4_MFTQCD.properties.conf
+# quarks_eos_file_name = ../eos.mft.qcd.CGS/MFT.QCD.B_100_XI_0.0075.FULL.CGS.csv
+# hadrons_eos_file_name = ../eos.sly4/sly4.dat.CGS.csv
+#
+# Range Quarks - P(mu) = EoSRange(inf_limit=-0.0014090618200500002, sup_limit=0.005491784404066667)
+# Range Hadrons - P(mu)  = EoSRange(inf_limit=6.250000000001658e-12, sup_limit=0.002676014021031547)
+#
+# Range = EoSRange(inf_limit=6.250000000001658e-12, sup_limit=0.002676014021031547)

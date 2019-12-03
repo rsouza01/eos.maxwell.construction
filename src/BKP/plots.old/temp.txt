@@ -1,0 +1,20 @@
+B=70
+P=1800
+epsilon(MFTQCD)=2350 MeV
+epsilon(Sly4)= 2025 MeV
+
+B=80
+P=1500
+epsilon(MFTQCD)=2020 MeV
+epsilon(Sly4)= 1053
+
+B=90
+P=1500
+epsilon(MFTQCD)=2105 MeV
+epsilon(Sly4)= 1053
+
+B = 100
+P = 1200
+epsilon(MFTQCD)=1034MeV
+epsilon(Sly4)= 
+

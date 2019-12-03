@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/eos.maxwell.construction.iml" filepath="$PROJECT_DIR$/.idea/eos.maxwell.construction.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../mit.bag.model.eos/.idea/mit.bag.model.eos.iml" filepath="$PROJECT_DIR$/../mit.bag.model.eos/.idea/mit.bag.model.eos.iml" />
+    </modules>
+  </component>
+</project>
